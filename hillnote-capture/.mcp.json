@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hillnote": {
+      "type": "http",
+      "url": "https://hillnote.com/mcp"
+    }
+  }
+}

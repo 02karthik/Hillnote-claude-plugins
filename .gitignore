@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Claude Code settings (personal; not part of the plugin)
+.claude/settings.local.json
