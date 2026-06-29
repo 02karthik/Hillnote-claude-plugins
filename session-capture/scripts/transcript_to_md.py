@@ -8,6 +8,10 @@ If no arg is given, uses $CLAUDE_CODE_SESSION_ID. A session id is resolved by
 globbing ~/.claude/projects/*/<id>.jsonl (robust against cwd-slug guessing); a
 path ending in .jsonl is used directly.
 
+By default only the conversation is rendered: user messages and Claude's text
+replies. Set TRANSCRIPT_FULL=1 to also include thinking, tool calls, and tool
+results (the verbose everything-mode).
+
 Self-check:  transcript_to_md.py --selfcheck
 """
 import glob
@@ -56,7 +60,7 @@ def _fence(text, lang=""):
     return f"{ticks}{lang}\n{text}\n{ticks}"
 
 
-def render(transcript_path):
+def render(transcript_path, full=False):
     out = []
     last_speaker = None  # 'user' | 'assistant' — only emit an H2 on change
 
@@ -91,7 +95,15 @@ def render(transcript_path):
                     out.append(body)
                 elif isinstance(content, list):
                     for b in content:
-                        if isinstance(b, dict) and b.get("type") == "tool_result":
+                        if not isinstance(b, dict):
+                            continue
+                        bt = b.get("type")
+                        if bt == "text":  # user prose attached to images/files
+                            txt = b.get("text", "").strip()
+                            if txt:
+                                speaker("user", "\U0001F464", "User")
+                                out.append(txt)
+                        elif bt == "tool_result" and full:
                             body = _textify(b.get("content", "")).strip()
                             out.append("\n#### \U0001F4E4 Tool Result\n")
                             out.append(_fence(body) if body else "_(no output)_")
@@ -103,7 +115,7 @@ def render(transcript_path):
                     if bt == "text":
                         speaker("assistant", "\U0001F916", "Assistant")
                         out.append(b.get("text", "").strip())
-                    elif bt == "thinking":
+                    elif bt == "thinking" and full:
                         think = b.get("thinking", "").strip()
                         if think:
                             out.append(
@@ -111,7 +123,7 @@ def render(transcript_path):
                                 + think
                                 + "\n\n</details>"
                             )
-                    elif bt == "tool_use":
+                    elif bt == "tool_use" and full:
                         name = b.get("name", "tool")
                         args = json.dumps(b.get("input", {}), indent=2, ensure_ascii=False)
                         out.append(f"\n#### \U0001F527 {name}\n")
@@ -142,18 +154,26 @@ def _selfcheck():
         for row in sample:
             f.write(json.dumps(row) + "\n")
         path = f.name
-    md = render(path)
+    md = render(path)            # default: conversation only
+    full = render(path, full=True)
     os.unlink(path)
+
+    # Default mode: user + assistant text kept; tools/results/thinking dropped.
     assert "## \U0001F464 User" in md, "missing user header"
     assert "## \U0001F916 Assistant" in md, "missing assistant header"
     assert "Add a cache." in md and "On it." in md and "Done." in md
-    assert "#### \U0001F527 Bash" in md and '"command": "ls"' in md
-    assert "#### \U0001F4E4 Tool Result" in md and "file.py" in md
-    assert "Thinking" in md and "use lru_cache" in md
+    assert "#### \U0001F527 Bash" not in md, "tool_use leaked into default mode"
+    assert "Tool Result" not in md and "file.py" not in md, "tool_result leaked"
+    assert "Thinking" not in md, "thinking leaked into default mode"
     # speaker header collapses consecutive same-speaker turns
     assert md.count("## \U0001F916 Assistant") == 1, "assistant header not collapsed"
     # bare slash-command invocation is stripped from the saved doc
     assert "/session-capture" not in md, "bare invocation not stripped"
+
+    # Full mode: everything present.
+    assert "#### \U0001F527 Bash" in full and '"command": "ls"' in full
+    assert "#### \U0001F4E4 Tool Result" in full and "file.py" in full
+    assert "Thinking" in full and "use lru_cache" in full
     print("selfcheck OK")
 
 
@@ -167,7 +187,8 @@ def main(argv):
             "transcript not found: set $CLAUDE_CODE_SESSION_ID or pass a session id / .jsonl path\n"
         )
         return 1
-    sys.stdout.write(render(path))
+    full = os.environ.get("TRANSCRIPT_FULL", "").lower() in ("1", "true", "yes", "full")
+    sys.stdout.write(render(path, full=full))
     return 0
 
 

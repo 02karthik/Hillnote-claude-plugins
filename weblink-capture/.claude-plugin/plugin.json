@@ -1,0 +1,10 @@
+{
+  "name": "weblink-capture",
+  "description": "Convert any website or weblink into Markdown (via markitdown) and save it into a chosen Hillnote workspace.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Hillnote",
+    "email": "karthik@colloqi.com"
+  },
+  "keywords": ["hillnote", "web", "url", "markdown", "markitdown", "capture", "clip"]
+}
