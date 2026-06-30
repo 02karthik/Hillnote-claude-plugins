@@ -1,0 +1,28 @@
+name: PR security gate
+
+# Blocks merges of plugin PRs that touch a trust boundary (MCP config, hooks,
+# new code-exec/network primitives in scripts, or the gate itself) until a
+# maintainer has reviewed them. Make this a *required* status check in branch
+# protection for it to actually block — see .github/README.md.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Self-test the auditor
+        run: python3 .github/scripts/pr_audit.py --selftest
+      - name: Audit changed plugin files
+        run: |
+          python3 .github/scripts/pr_audit.py \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"

@@ -1,0 +1,4 @@
+# Every change to main needs an owner's review. Combined with "Require review
+# from Code Owners" in branch protection, this is what actually stops a
+# malicious PR from being merged.
+*       @02karthik
