@@ -25,11 +25,16 @@ renders the full transcript to Markdown, lists your Hillnote workspaces so you
 can pick one, and saves the session as a dated document under
 `documents/claude-sessions/`.
 
+**response-capture** — run `/response-capture` to save just the last question you asked and
+Claude's answer (skipping tool calls and thinking). Same workspace picker,
+saved under `documents/claude-qa/`.
+
 ## Plugins
 
 | Plugin | Description |
 | --- | --- |
 | `session-capture` | Save the entire Claude Code session transcript into a chosen Hillnote workspace as a dated document. |
+| `response-capture` | Save the last user question and Claude's answer into a chosen Hillnote workspace as a dated document. |
 
 ## Roadmap
 
