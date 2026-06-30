@@ -29,6 +29,15 @@ can pick one, and saves the session as a dated document under
 Claude's answer (skipping tool calls and thinking). Same workspace picker,
 saved under `documents/claude-qa/`.
 
+## Privacy
+
+These plugins send the captured content — your session transcript or the last
+Q&A — to Hillnote's servers (`https://hillnote.com/mcp`), where it is stored in
+the workspace you pick. A transcript can include anything that appeared in your
+terminal, such as API keys, environment variables, or proprietary code. Review
+what a session contains before saving it, and only capture sessions you are
+comfortable storing on Hillnote.
+
 ## Plugins
 
 | Plugin | Description |

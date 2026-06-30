@@ -19,10 +19,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Run the auditor from the BASE branch, not the PR's checkout — otherwise a
+      # PR could replace pr_audit.py with `exit 0` and pass its own check. The
+      # base copy still flags the .github/ change, so the tamper is caught.
+      - name: Load trusted auditor from base
+        run: git show "${{ github.event.pull_request.base.sha }}:.github/scripts/pr_audit.py" > "$RUNNER_TEMP/pr_audit.py"
       - name: Self-test the auditor
-        run: python3 .github/scripts/pr_audit.py --selftest
+        run: python3 "$RUNNER_TEMP/pr_audit.py" --selftest
       - name: Audit changed plugin files
         run: |
-          python3 .github/scripts/pr_audit.py \
+          python3 "$RUNNER_TEMP/pr_audit.py" \
             "${{ github.event.pull_request.base.sha }}" \
             "${{ github.event.pull_request.head.sha }}"
