@@ -1,0 +1,10 @@
+{
+  "name": "kanban-board",
+  "description": "Parse the last Claude answer for TODO items and turn them into a kanban board in a chosen Hillnote workspace.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Hillnote",
+    "email": "karthik@colloqi.com"
+  },
+  "keywords": ["hillnote", "kanban", "board", "todo", "tasks", "database"]
+}
