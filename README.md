@@ -1,4 +1,4 @@
-# Hillnote Plugins
+# Hillnote Claude Plugins
 
 Claude Code plugins for [Hillnote](https://hillnote.com).
 
