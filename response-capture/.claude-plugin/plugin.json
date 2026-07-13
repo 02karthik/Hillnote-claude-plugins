@@ -1,7 +1,7 @@
 {
   "name": "response-capture",
   "description": "Save the last user question and Claude's answer into a chosen Hillnote workspace, titled after the conversation.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Hillnote",
     "email": "karthik@colloqi.com"
