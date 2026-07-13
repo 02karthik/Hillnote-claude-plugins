@@ -82,6 +82,8 @@ def render(transcript_path, full=False):
             t = entry.get("type")
             if t not in ("user", "assistant"):
                 continue  # metadata lines (mode, attachment, ai-title, ...)
+            if entry.get("isMeta"):
+                continue  # system-injected turn, e.g. an expanded slash-command body
             content = (entry.get("message") or {}).get("content")
 
             if t == "user":
@@ -91,6 +93,8 @@ def render(transcript_path, full=False):
                     # /session-capture trigger itself); keep prose that merely mentions one.
                     if re.fullmatch(r"/[\w:.-]+", body):
                         continue
+                    if "<command-name>" in body or "<command-message>" in body:
+                        continue  # slash-command trigger wrapper (command with a prompt body)
                     speaker("user", "\U0001F464", "User")
                     out.append(body)
                 elif isinstance(content, list):
@@ -148,7 +152,14 @@ def _selfcheck():
         {"type": "assistant", "message": {"role": "assistant", "content": [
             {"type": "text", "text": "Done."},
         ]}},
-        {"type": "user", "message": {"role": "user", "content": "/session-capture:session-capture"}},
+        # A slash-command-with-body is recorded as a wrapper string followed by
+        # an isMeta expansion of the command's prompt. Neither is a real turn.
+        {"type": "user", "message": {"role": "user", "content":
+            "<command-message>session-capture:session-capture</command-message>\n"
+            "<command-name>/session-capture:session-capture</command-name>"}},
+        {"type": "user", "isMeta": True, "message": {"role": "user", "content": [
+            {"type": "text", "text": "Save the entire current Claude Code session ..."},
+        ]}},
     ]
     with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
         for row in sample:
@@ -169,6 +180,9 @@ def _selfcheck():
     assert md.count("## \U0001F916 Assistant") == 1, "assistant header not collapsed"
     # bare slash-command invocation is stripped from the saved doc
     assert "/session-capture" not in md, "bare invocation not stripped"
+    # the slash-command wrapper and its isMeta expansion are stripped too
+    assert "command-name" not in md, "command wrapper leaked into saved doc"
+    assert "Save the entire current" not in md, "expanded command body leaked"
 
     # Full mode: everything present.
     assert "#### \U0001F527 Bash" in full and '"command": "ls"' in full

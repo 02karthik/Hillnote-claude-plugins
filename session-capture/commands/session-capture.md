@@ -1,24 +1,21 @@
 ---
-description: Save the entire current Claude Code session to a chosen Hillnote workspace as a dated document.
+description: Save the entire current Claude Code session to a chosen Hillnote workspace, titled after what the session was about.
 ---
 
 Capture this entire Claude Code session and save it into a Hillnote workspace the user picks. Follow these steps exactly.
 
-1. **Build the document title.** Run:
-
-   ```bash
-   date "+Session %Y-%m-%d %H:%M"
-   ```
-
-   Use the output verbatim as the document title (e.g. `Session 2026-06-26 17:53`).
-
-2. **Render the session transcript to Markdown.** Run:
+1. **Render the session transcript to Markdown.** Run:
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/scripts/transcript_to_md.py"
    ```
 
    The script reads `$CLAUDE_CODE_SESSION_ID`, finds this session's `.jsonl`, and prints the conversation — user messages and Claude's text replies — as Markdown to stdout. Tool calls, tool results, and thinking are omitted by default for a clean read; prefix `TRANSCRIPT_FULL=1` to the command to include them. Capture that stdout — it is the document body. If the script exits non‑zero, show its error and stop.
+
+2. **Build the document title from the conversation.** Read the rendered transcript and compose a short, descriptive Title Case name — 3 to 8 words capturing the session's main topic or outcome (e.g. `Debugging Auth Token Refresh`, `Planning the Q3 Data Migration`). Rules:
+   - Derive it from what was actually discussed; do not invent detail that isn't in the transcript.
+   - Plain text only — no dates, emoji, quotes, slashes, or other punctuation that could upset a filename.
+   - Only if the conversation is too thin to name (e.g. a single trivial exchange), fall back to a dated title by running `date "+Session %Y-%m-%d %H:%M"` and using its output verbatim.
 
 3. **List Hillnote workspaces and let the user choose — interactively.** Call the Hillnote `list_workspaces` tool. Then present the choice with the `AskUserQuestion` tool (a clickable menu) instead of asking them to type — this keeps the turn alive so the command doesn't quit.
 
@@ -29,8 +26,8 @@ Capture this entire Claude Code session and save it into a Hillnote workspace th
 
 4. **Save the document.** Call the Hillnote `add_document` tool with:
    - `workspace`: the id of the workspace the user chose
-   - `title`: the title from step 1
-   - `content`: the Markdown body from step 2
+   - `title`: the title from step 2
+   - `content`: the Markdown body from step 1
    - `folder`: `"claude-sessions"` (saves under `documents/claude-sessions/`)
    - `tags`: `["claude-code-session"]`
    - `emoji`: `"🎪"`

@@ -1,7 +1,7 @@
 {
   "name": "session-capture",
-  "description": "Save the entire Claude Code session transcript into a chosen Hillnote workspace as a dated document.",
-  "version": "0.1.0",
+  "description": "Save the entire Claude Code session transcript into a chosen Hillnote workspace, titled after the conversation.",
+  "version": "0.1.1",
   "author": {
     "name": "Hillnote",
     "email": "karthik@colloqi.com"

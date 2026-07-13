@@ -40,6 +40,8 @@ def _user_text(content):
         body = content.strip()
         if not body or re.fullmatch(r"/[\w:.-]+", body):
             return None  # bare /command invocation, e.g. the trigger itself
+        if "<command-name>" in body or "<command-message>" in body:
+            return None  # slash-command trigger wrapper (command with a prompt body)
         return body
     if isinstance(content, list):
         parts = [b.get("text", "").strip() for b in content
@@ -65,6 +67,8 @@ def extract_last_qa(transcript_path):
             t = entry.get("type")
             if t not in ("user", "assistant"):
                 continue
+            if entry.get("isMeta"):
+                continue  # system-injected turn, e.g. an expanded slash-command body
             content = (entry.get("message") or {}).get("content")
 
             if t == "user":
@@ -111,7 +115,14 @@ def _selfcheck():
         {"type": "assistant", "message": {"role": "assistant", "content": [
             {"type": "text", "text": "Part two."},
         ]}},
-        {"type": "user", "message": {"role": "user", "content": "/response-capture:response-capture"}},
+        # A slash-command-with-body is recorded as a wrapper string followed by
+        # an isMeta expansion of the command's prompt. Neither is a real turn.
+        {"type": "user", "message": {"role": "user", "content":
+            "<command-message>response-capture:response-capture</command-message>\n"
+            "<command-name>/response-capture:response-capture</command-name>"}},
+        {"type": "user", "isMeta": True, "message": {"role": "user", "content": [
+            {"type": "text", "text": "Capture the most recent question-and-answer exchange ..."},
+        ]}},
     ]
     with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
         for row in sample:
@@ -128,6 +139,9 @@ def _selfcheck():
     # Tools / thinking omitted; the bare trigger is not treated as the question.
     assert "Bash" not in md and "ponder" not in md, "noise leaked"
     assert "/response-capture" not in md, "trigger treated as question"
+    # The slash-command wrapper and its isMeta body must not become the question.
+    assert "command-name" not in md, "command wrapper treated as question"
+    assert "Capture the most recent" not in md, "expanded command body leaked"
     print("selfcheck OK")
 
 

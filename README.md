@@ -19,8 +19,8 @@ Then install the plugin, by replacing <plugin-name> with appropriate one from th
 
 | Plugin Name | Description |
 | --- | --- |
-| `session-capture` | Save the entire Claude Code session transcript into a chosen Hillnote workspace as a dated document. |
-| `response-capture` | Save the last user question and Claude's answer into a chosen Hillnote workspace as a dated document. |
+| `session-capture` | Save the entire Claude Code session transcript into a chosen Hillnote workspace, titled after the conversation. |
+| `response-capture` | Save the last user question and Claude's answer into a chosen Hillnote workspace, titled after the conversation. |
 | `kanban-board` | Parse the last Claude answer for TODO items and turn them into a kanban board in a chosen Hillnote workspace. |
 
 
@@ -35,8 +35,9 @@ server in your browser.
 
 **session-capture** — run `/session-capture` in any Claude Code session. It
 renders the full transcript to Markdown, lists your Hillnote workspaces so you
-can pick one, and saves the session as a dated document under
-`documents/claude-sessions/`.
+can pick one, and saves the session under `documents/claude-sessions/` with a
+title derived from what the conversation was about (falling back to a dated
+title only when the session is too thin to name).
 
 **response-capture** — run `/response-capture` to save just the last question you asked and
 Claude's answer (skipping tool calls and thinking). Same workspace picker,

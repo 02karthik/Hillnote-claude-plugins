@@ -1,24 +1,21 @@
 ---
-description: Save the last user question and Claude's answer to a chosen Hillnote workspace as a dated document.
+description: Save the last user question and Claude's answer to a chosen Hillnote workspace, titled after what was asked.
 ---
 
 Capture the most recent question-and-answer exchange from this Claude Code session and save it into a Hillnote workspace the user picks. Follow these steps exactly.
 
-1. **Build the document title.** Run:
-
-   ```bash
-   date "+Q&A %Y-%m-%d %H:%M"
-   ```
-
-   Use the output verbatim as the document title (e.g. `Q&A 2026-06-26 17:53`).
-
-2. **Render the last Q&A to Markdown.** Run:
+1. **Render the last Q&A to Markdown.** Run:
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/scripts/last_response_to_md.py"
    ```
 
    The script reads `$CLAUDE_CODE_SESSION_ID`, finds this session's `.jsonl`, and prints the **last** user question and Claude's answer as Markdown to stdout. Earlier turns, tool calls, tool results, and thinking are omitted. Capture that stdout — it is the document body. If the script exits non‑zero, show its error and stop.
+
+2. **Build the document title from the Q&A.** Read the rendered question and answer and compose a short, descriptive Title Case name — 3 to 8 words capturing what was asked or resolved (e.g. `Why Docker Builds Fail on ARM`, `Renaming a Git Branch Safely`). Rules:
+   - Derive it from the captured question/answer; do not invent detail that isn't there.
+   - Plain text only — no dates, emoji, quotes, slashes, or other punctuation that could upset a filename.
+   - Only if the exchange is too thin to name, fall back to a dated title by running `date "+Q&A %Y-%m-%d %H:%M"` and using its output verbatim.
 
 3. **List Hillnote workspaces and let the user choose — interactively.** Call the Hillnote `list_workspaces` tool. Then present the choice with the `AskUserQuestion` tool (a clickable menu) instead of asking them to type — this keeps the turn alive so the command doesn't quit.
 
@@ -29,8 +26,8 @@ Capture the most recent question-and-answer exchange from this Claude Code sessi
 
 4. **Save the document.** Call the Hillnote `add_document` tool with:
    - `workspace`: the id of the workspace the user chose
-   - `title`: the title from step 1
-   - `content`: the Markdown body from step 2
+   - `title`: the title from step 2
+   - `content`: the Markdown body from step 1
    - `folder`: `"claude-qa"` (saves under `documents/claude-qa/`)
    - `tags`: `["claude-code-qa"]`
    - `emoji`: `"💬"`
